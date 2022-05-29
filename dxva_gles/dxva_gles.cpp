@@ -383,6 +383,23 @@ void draw(ESContext* esContext)
 							 0.5f, -0.5f, 0.0f
 	};
 
+#if 1
+	static bool decrease = true;
+	static float ypos = 0.5;
+	ypos = (decrease) ? (ypos - 0.01) : (ypos + 0.01);
+	if (ypos < -0.8)
+	{
+		ypos = -0.8;
+		decrease = false;
+	}
+	if (ypos > 0.5)
+	{
+		ypos = 0.5;
+		decrease = true;
+	}
+	vVertices[1] = ypos;
+#endif
+
 	// Set the viewport
 	glViewport(0, 0, esContext->width, esContext->height);
 
@@ -445,11 +462,15 @@ void winLoop(ESContext* esContext)
 }
 
 int main(int argc, char** argv)
-{
+{	
+	int scaling = 1;
+	if (argc >= 2)
+		scaling = atoi(argv[1]);
+
 	ESContext esContextData = {};
 	ESContext* esContext = &esContextData;
-	esContext->width = 320;
-	esContext->height = 240;
+	esContext->width = 320 * scaling;
+	esContext->height = 240 * scaling;
 	esContext->userData = malloc(sizeof(UserData));
 
 	if (initEGL(esContext) != 0)

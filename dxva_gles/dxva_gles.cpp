@@ -20,6 +20,13 @@
 #define GWL_USERDATA GWLP_USERDATA
 #endif
 
+typedef struct
+{
+	// Handle to a program object
+	GLuint programObject;
+} UserData;
+
+
 typedef struct ESContext ESContext;
 
 struct ESContext
@@ -52,7 +59,7 @@ struct ESContext
 /// esCreateWindow flat - multi-sample buffer
 #define ES_WINDOW_MULTISAMPLE   8
 
-EGLint GetContextRenderableType(EGLDisplay eglDisplay)
+EGLint getContextRenderableType(EGLDisplay eglDisplay)
 {
 #ifdef EGL_KHR_create_context
 	const char* extensions = eglQueryString(eglDisplay, EGL_EXTENSIONS);
@@ -68,7 +75,7 @@ EGLint GetContextRenderableType(EGLDisplay eglDisplay)
 	return EGL_OPENGL_ES2_BIT;
 }
 
-LRESULT WINAPI ESWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT WINAPI esWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	LRESULT  lRet = 1;
 
@@ -119,7 +126,7 @@ LRESULT WINAPI ESWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return lRet;
 }
 
-GLboolean WinCreate(ESContext* esContext, const char* title)
+GLboolean winCreate(ESContext* esContext, const char* title)
 {
 	WNDCLASS wndclass = { 0 };
 	DWORD    wStyle = 0;
@@ -127,7 +134,7 @@ GLboolean WinCreate(ESContext* esContext, const char* title)
 	HINSTANCE hInstance = GetModuleHandle(NULL);
 
 	wndclass.style = CS_OWNDC;
-	wndclass.lpfnWndProc = (WNDPROC)ESWindowProc;
+	wndclass.lpfnWndProc = (WNDPROC)esWindowProc;
 	wndclass.hInstance = hInstance;
 	wndclass.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
 	wndclass.lpszClassName = "opengles3.0";
@@ -182,7 +189,7 @@ GLboolean WinCreate(ESContext* esContext, const char* title)
 
 int initEGL(ESContext* esContext)
 {
-	if (!WinCreate(esContext, "Triangle"))
+	if (!winCreate(esContext, "Triangle"))
 	{
 		printf("ERROR: WinCreate failed! \n");
 		return -1;
@@ -220,7 +227,7 @@ int initEGL(ESContext* esContext)
 	   EGL_SAMPLE_BUFFERS, (flags & ES_WINDOW_MULTISAMPLE) ? 1 : 0,
 	   // if EGL_KHR_create_context extension is supported, then we will use
 	   // EGL_OPENGL_ES3_BIT_KHR instead of EGL_OPENGL_ES2_BIT in the attribute list
-	   EGL_RENDERABLE_TYPE, GetContextRenderableType(esContext->eglDisplay),
+	   EGL_RENDERABLE_TYPE, getContextRenderableType(esContext->eglDisplay),
 	   EGL_NONE
 	};
 
@@ -262,6 +269,111 @@ int initEGL(ESContext* esContext)
 	return 0;
 }
 
+GLuint loadShader(GLenum type, const char* shaderSrc)
+{
+	GLuint shader;
+	GLint compiled;
+
+	// Create the shader object
+	shader = glCreateShader(type);
+	if (shader == 0)
+	{
+		return 0;
+	}
+
+	// Load the shader source
+	glShaderSource(shader, 1, &shaderSrc, NULL);
+
+	// Compile the shader
+	glCompileShader(shader);
+
+	// Check the compile status
+	glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+
+	if (!compiled)
+	{
+		GLint infoLen = 0;
+		glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLen);
+		if (infoLen > 1)
+		{
+			char* infoLog = (char*)malloc(sizeof(char) * infoLen);
+			glGetShaderInfoLog(shader, infoLen, NULL, infoLog);
+			printf("ERROR: failed in compiling shader: %s\n", infoLog);
+			free(infoLog);
+		}
+		glDeleteShader(shader);
+		return 0;
+	}
+
+	return shader;
+}
+
+int initShader(ESContext* esContext)
+{
+	UserData* userData = (UserData*)esContext->userData;
+	char vShaderStr[] =
+		"#version 300 es                          \n"
+		"layout(location = 0) in vec4 vPosition;  \n"
+		"void main()                              \n"
+		"{                                        \n"
+		"   gl_Position = vPosition;              \n"
+		"}                                        \n";
+
+	char fShaderStr[] =
+		"#version 300 es                              \n"
+		"precision mediump float;                     \n"
+		"out vec4 fragColor;                          \n"
+		"void main()                                  \n"
+		"{                                            \n"
+		"   fragColor = vec4 ( 1.0, 0.0, 0.0, 1.0 );  \n"
+		"}                                            \n";
+
+	GLuint vertexShader;
+	GLuint fragmentShader;
+	GLuint programObject;
+	GLint linked;
+
+	// Load the vertex/fragment shaders
+	vertexShader = loadShader(GL_VERTEX_SHADER, vShaderStr);
+	fragmentShader = loadShader(GL_FRAGMENT_SHADER, fShaderStr);
+
+	// Create the program object
+	programObject = glCreateProgram();
+	if (programObject == 0)
+	{
+		printf("ERROR: glCreateProgram failed! \n");
+		return -1;
+	}
+
+	glAttachShader(programObject, vertexShader);
+	glAttachShader(programObject, fragmentShader);
+
+	// Link the program
+	glLinkProgram(programObject);
+
+	// Check the link status
+	glGetProgramiv(programObject, GL_LINK_STATUS, &linked);
+	if (!linked)
+	{
+		GLint infoLen = 0;
+		glGetProgramiv(programObject, GL_INFO_LOG_LENGTH, &infoLen);
+		if (infoLen > 1)
+		{
+			char* infoLog = (char*)malloc(sizeof(char) * infoLen);
+			glGetProgramInfoLog(programObject, infoLen, NULL, infoLog);
+			printf("ERROR: failed in linking program: %s\n", infoLog);
+			free(infoLog);
+		}
+		glDeleteProgram(programObject);
+		return -1;
+	}
+
+	// Store the program object
+	userData->programObject = programObject;
+
+	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+	return 0;
+}
 
 int main(int argc, char** argv)
 {
@@ -269,10 +381,17 @@ int main(int argc, char** argv)
 	ESContext* esContext = &esContextData;
 	esContext->width = 320;
 	esContext->height = 240;
+	esContext->userData = malloc(sizeof(UserData));
 
 	if (initEGL(esContext) != 0)
 	{
-		printf("ERROR: initEGL failed! \n");
+		printf("ERROR: InitEGL failed! \n");
+		return -1;
+	}
+
+	if (initShader(esContext) != 0)
+	{
+		printf("ERROR: InitShader failed! \n");
 		return -1;
 	}
 

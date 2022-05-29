@@ -375,6 +375,75 @@ int initShader(ESContext* esContext)
 	return 0;
 }
 
+void draw(ESContext* esContext)
+{
+	UserData* userData = (UserData*) esContext->userData;
+	GLfloat vVertices[] = { 0.0f,  0.5f, 0.0f,
+							 -0.5f, -0.5f, 0.0f,
+							 0.5f, -0.5f, 0.0f
+	};
+
+	// Set the viewport
+	glViewport(0, 0, esContext->width, esContext->height);
+
+	// Clear the color buffer
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	// Use the program object
+	glUseProgram(userData->programObject);
+
+	// Load the vertex data
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, vVertices);
+	glEnableVertexAttribArray(0);
+
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+}
+
+void shutdown(ESContext* esContext)
+{
+	UserData* userData = (UserData*) esContext->userData;
+
+	glDeleteProgram(userData->programObject);
+}
+
+void winLoop(ESContext* esContext)
+{
+	MSG msg = { 0 };
+	int done = 0;
+	DWORD lastTime = GetTickCount();
+
+	while (!done)
+	{
+		int gotMsg = (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) != 0);
+		DWORD curTime = GetTickCount();
+		float deltaTime = (float)(curTime - lastTime) / 1000.0f;
+		lastTime = curTime;
+
+		if (gotMsg)
+		{
+			if (msg.message == WM_QUIT)
+			{
+				done = 1;
+			}
+			else
+			{
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+		}
+		else
+		{
+			SendMessage(esContext->eglNativeWindow, WM_PAINT, 0, 0);
+		}
+
+		// Call update function if registered
+		if (esContext->updateFunc != NULL)
+		{
+			esContext->updateFunc(esContext, deltaTime);
+		}
+	}
+}
+
 int main(int argc, char** argv)
 {
 	ESContext esContextData = {};
@@ -393,6 +462,21 @@ int main(int argc, char** argv)
 	{
 		printf("ERROR: InitShader failed! \n");
 		return -1;
+	}
+
+	esContext->drawFunc = draw;
+	esContext->shutdownFunc = shutdown;
+
+	winLoop(esContext);
+
+	if (esContext->shutdownFunc != NULL)
+	{
+		esContext->shutdownFunc(esContext);
+	}
+
+	if (esContext->userData != NULL)
+	{
+		free(esContext->userData);
 	}
 
     printf("done\n");

@@ -16,7 +16,7 @@ git clone https://github.com/microsoft/vcpkg
 .\vcpkg\vcpkg install angle:x64-windows
 ```
 
-note: if get fetch error in git, set git proxy with cmd "git config --global http.proxy=http://xxx.xxx.xxx:yyy" 
+note: if get fetch error in git, set git proxy with cmd "git config --global http.proxy http://xxx.xxx.xxx:yyy" 
 
 ## set angle path
 

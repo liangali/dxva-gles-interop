@@ -8,6 +8,9 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #ifdef _WIN64
 #define GWL_USERDATA GWLP_USERDATA
 #endif
@@ -314,16 +317,18 @@ int main(int argc, char *argv[])
     glEnableVertexAttribArray(1);
 
     //========== read image data
-    unsigned int width = 320, height = 240;
-    std::vector<uint8_t> img(width*height*3, 128);
-    //auto error = lodepng::decode(img, width, height, argv[1], LCT_RGB);
-    //if (error) {
-    //    std::cerr << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
-    //    std::exit(1);
-    //}
+    //unsigned int width = 320, height = 240;
+    //std::vector<uint8_t> img(width*height * 3, 128);
+
+    int width, height, nrChannels;
+    unsigned char *img_data = stbi_load("dog.jpg", &width, &height, &nrChannels, 0);
+    if (!img_data) {
+        printf("ERROR: stbi_load image failed! \n");
+        return -1;
+    }
     printf("image width: %d, height: %d\n", width, height);
 
-    std::vector<uint8_t> img_out(width * height * 3);
+    std::vector<uint8_t> img_out(width * height * 4);
 
     //========== upload image to input texture
     GLuint texture_in;
@@ -334,7 +339,8 @@ int main(int argc, char *argv[])
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, img.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, img_data);
+    stbi_image_free(img_data);
 
     //========== output texture
     GLuint texture_out;

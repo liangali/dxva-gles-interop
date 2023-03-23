@@ -242,11 +242,22 @@ int initEGL(ESContext* esContext)
 
 int main(int argc, char *argv[])
 {
+    std::string inputImg;
     ESContext esContextData = {};
     ESContext* esContext = &esContextData;
     esContext->width = 320;
     esContext->height = 240;
     esContext->userData = malloc(sizeof(UserData));
+
+    if (argc == 1)
+        inputImg = "dog.jpg";
+    else if (argc == 2)
+        inputImg = argv[1];
+    else
+    {
+        printf("ERROR: Invalid cmd line! \n");
+        return -1;
+    }
 
     if (initEGL(esContext) != 0)
     {
@@ -321,11 +332,8 @@ int main(int argc, char *argv[])
     glEnableVertexAttribArray(1);
 
     //========== read image data
-    //unsigned int width = 320, height = 240;
-    //std::vector<uint8_t> img(width*height * 3, 128);
-
     int width, height, nrChannels;
-    unsigned char *img_data = stbi_load("dog.jpg", &width, &height, &nrChannels, 0);
+    unsigned char *img_data = stbi_load(inputImg.c_str(), &width, &height, &nrChannels, 0);
     if (!img_data) {
         printf("ERROR: stbi_load image failed! \n");
         return -1;
@@ -333,7 +341,6 @@ int main(int argc, char *argv[])
     printf("image width: %d, height: %d\n", width, height);
 
     std::vector<uint8_t> img_out(width * height * 4);
-
     //========== upload image to input texture
     GLuint texture_in;
     glGenTextures(1, &texture_in);
@@ -381,8 +388,6 @@ int main(int argc, char *argv[])
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid *)img_out.data());
 
     stbi_write_png("out.png", width, height, 4, img_out.data(), width*4);
-    //error = lodepng::encode("results/img_out.png", img_out, width, height, LCT_RGB);
-    //if (error) std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
 
     return 0;
 }

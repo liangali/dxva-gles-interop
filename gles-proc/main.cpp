@@ -11,6 +11,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#define STBI_MSC_SECURE_CRT
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 #ifdef _WIN64
 #define GWL_USERDATA GWLP_USERDATA
 #endif
@@ -376,6 +380,7 @@ int main(int argc, char *argv[])
     //========== read output image
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid *)img_out.data());
 
+    stbi_write_png("out.png", width, height, 4, img_out.data(), width*4);
     //error = lodepng::encode("results/img_out.png", img_out, width, height, LCT_RGB);
     //if (error) std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;
 

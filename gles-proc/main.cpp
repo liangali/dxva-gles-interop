@@ -368,7 +368,7 @@ int main(int argc, char *argv[])
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
     //========== read output image
-    glReadPixels(0, 0, width, height, GL_RGB_INTEGER, GL_UNSIGNED_BYTE, (GLvoid *)img_out.data());
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid *)img_out.data());
 
     //error = lodepng::encode("results/img_out.png", img_out, width, height, LCT_RGB);
     //if (error) std::cout << "encoder error " << error << ": " << lodepng_error_text(error) << std::endl;

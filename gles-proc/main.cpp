@@ -1,5 +1,6 @@
 #include <vector>
 #include <iostream>
+#include <fstream>
 
 #include <stdio.h>
 #include <windows.h>
@@ -240,9 +241,36 @@ int initEGL(ESContext* esContext)
     return 0;
 }
 
+std::string readShaderFile(const char* filename)
+{
+    std::string str;
+    std::ifstream infile(filename);
+    if (infile) {
+        infile.seekg(0, infile.end);
+        size_t length = infile.tellg();
+        infile.seekg(0, infile.beg);
+
+        std::vector<char> buf(length + 1, 0);
+        infile.read(buf.data(), length);
+        infile.close();
+
+        if (length) {
+            printf("INFO: read shader file %s, size = %lld\n", filename, length);
+        } else {
+            printf("ERROR: failed to read shader file %s\n", filename);
+            exit(-1);
+        }
+
+        return std::string(buf.data());
+    } else {
+        printf("ERROR: cannot open shader file %s\n", filename);
+        exit(-1);
+    }
+}
+
 int main(int argc, char *argv[])
 {
-    std::string inputImg;
+    std::string inputImg, shaderName;
     ESContext esContextData = {};
     ESContext* esContext = &esContextData;
     esContext->width = 320;
@@ -253,8 +281,10 @@ int main(int argc, char *argv[])
         inputImg = "dog.jpg";
     else if (argc == 2)
         inputImg = argv[1];
-    else
-    {
+    else if (argc == 3) {
+        inputImg = argv[1];
+        shaderName = argv[2];
+    } else {
         printf("ERROR: Invalid cmd line! \n");
         return -1;
     }
@@ -269,9 +299,20 @@ int main(int argc, char *argv[])
     printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
     printf("GL_SHADING_LANGUAGE_VERSION: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
+    std::string vstr, fstr;
+    char* vert_str = (char*)vert_src;
+    char* frag_str = (char*)frag_src;
+    if (shaderName.length())
+    {
+        vstr = readShaderFile("proc.vert");
+        fstr = readShaderFile("proc.frag");
+        vert_str = (char*)vstr.c_str();
+        frag_str = (char*)fstr.c_str();
+    }
+
     //========== shader program
     GLuint vert_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vert_shader, 1, &vert_src, NULL);
+    glShaderSource(vert_shader, 1, &vert_str, NULL);
     glCompileShader(vert_shader);
 
     int success;
@@ -284,7 +325,7 @@ int main(int argc, char *argv[])
     }
 
     GLuint frag_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(frag_shader, 1, &frag_src, NULL);
+    glShaderSource(frag_shader, 1, &frag_str, NULL);
     glCompileShader(frag_shader);
 
     glGetShaderiv(frag_shader, GL_COMPILE_STATUS, &success);

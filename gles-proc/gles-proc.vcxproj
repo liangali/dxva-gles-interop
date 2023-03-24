@@ -84,6 +84,11 @@
       <AdditionalLibraryDirectories>$(ANGLE_PATH)\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>libEGL.lib;libGLESv2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>copy $(ProjectDir)dog.jpg $(OutDir)
+copy $(ProjectDir)*.vert $(OutDir)
+copy $(ProjectDir)*.frag $(OutDir)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

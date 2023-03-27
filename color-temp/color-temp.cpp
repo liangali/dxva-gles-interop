@@ -31,6 +31,32 @@
 /// esCreateWindow flat - multi-sample buffer
 #define ES_WINDOW_MULTISAMPLE   8
 
+const char *vert_src = "\
+#version 300 es\n\
+layout (location = 0) in vec3 in_position;\n\
+layout (location = 1) in vec2 in_texcoord;\n\
+out vec2 texcoord;\n\
+void main()\n\
+{\n\
+    texcoord = in_texcoord;\n\
+    gl_Position = vec4(in_position, 1.0);\n\
+}\n\
+";
+
+const char *frag_src = "\
+#version 300 es\n\
+precision mediump float;                     \n\
+in vec2 texcoord;\n\
+out vec3 fragcolor;\n\
+uniform sampler2D tex;\n\
+void main()\n\
+{\n\
+    fragcolor = 1.0 - texture(tex, texcoord).rgb;\n\
+}\n\
+";
+
+// fragcolor = 1.0 - texture(tex, texcoord).rgb;\n\
+
 typedef struct
 {
     // Handle to a program object
@@ -230,13 +256,15 @@ std::string readShaderFile(const char* filename)
 
         if (length) {
             printf("INFO: read shader file %s, size = %lld\n", filename, length);
-        } else {
+        }
+        else {
             printf("ERROR: failed to read shader file %s\n", filename);
             exit(-1);
         }
 
         return std::string(buf.data());
-    } else {
+    }
+    else {
         printf("ERROR: cannot open shader file %s\n", filename);
         exit(-1);
     }
@@ -270,8 +298,8 @@ int main(int argc, char *argv[])
     printf("GL_VERSION: %s\n", glGetString(GL_VERSION));
     printf("GL_SHADING_LANGUAGE_VERSION: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-    std::string vstr = readShaderFile("proc.vert");
-    std::string fstr = readShaderFile("proc.frag");
+    std::string vstr = readShaderFile("quad.vert");
+    std::string fstr = readShaderFile("quad.frag");
     char* vert_str = (char*)vstr.c_str();
     char* frag_str = (char*)fstr.c_str();
 
@@ -384,6 +412,16 @@ int main(int argc, char *argv[])
         printf("glCheckFramebufferStatus error. %d\n", glCheckFramebufferStatus(GL_FRAMEBUFFER));
     }
 
+    float rv[3] = { 0.9611682f, -0.05449148f, -0.01015827f };
+    float gv[3] = { 0.00256727f, 1.01033f, -0.00388904f };
+    float bv[3] = { 0.004813198f, 0.01739324f, 1.192613f };
+    unsigned int rvec3 = glGetUniformLocation(program, "u_RVec3");
+    unsigned int gvec3 = glGetUniformLocation(program, "u_GVec3");
+    unsigned int bvec3 = glGetUniformLocation(program, "u_BVec3");
+    glUniform3fv(rvec3, 1, rv);
+    glUniform3fv(gvec3, 1, gv);
+    glUniform3fv(bvec3, 1, bv);
+
     //========== render
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -393,7 +431,7 @@ int main(int argc, char *argv[])
     //========== read output image
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid *)img_out.data());
 
-    stbi_write_png("out.png", width, height, 4, img_out.data(), width*4);
+    stbi_write_png("out.png", width, height, 4, img_out.data(), width * 4);
 
     return 0;
 }

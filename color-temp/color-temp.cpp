@@ -422,11 +422,19 @@ int main(int argc, char *argv[])
     glUniform3fv(gvec3, 1, gv);
     glUniform3fv(bvec3, 1, bv);
 
-    //========== render
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    printf("start to process ...\n");
+    for (size_t i = 0; i < 50; i++)
+    {
+        //========== render
+        glClearColor(0.0, 0.0, 0.0, 0.0);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        glFlush();
+        Sleep(2);
+        printf("-");
+    }
+    printf("\nfinish!\n");
 
     //========== read output image
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid *)img_out.data());

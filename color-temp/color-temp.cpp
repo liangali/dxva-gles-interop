@@ -273,6 +273,7 @@ std::string readShaderFile(const char* filename)
 int main(int argc, char *argv[])
 {
     std::string inputImg, shaderName;
+    int loopNum = 50;
     ESContext esContextData = {};
     ESContext* esContext = &esContextData;
     esContext->width = 320;
@@ -283,6 +284,10 @@ int main(int argc, char *argv[])
         inputImg = "dog.jpg";
     else if (argc == 2)
         inputImg = argv[1];
+    else if (argc == 3) {
+        inputImg = argv[1];
+        loopNum = atoi(argv[2]);
+    }
     else {
         printf("ERROR: Invalid cmd line! \n");
         return -1;
@@ -423,7 +428,7 @@ int main(int argc, char *argv[])
     glUniform3fv(bvec3, 1, bv);
 
     printf("start to process ...\n");
-    for (size_t i = 0; i < 50; i++)
+    for (size_t i = 0; i < loopNum; i++)
     {
         //========== render
         glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -431,7 +436,7 @@ int main(int argc, char *argv[])
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glFlush();
-        Sleep(2);
+        Sleep(1);
         printf("-");
     }
     printf("\nfinish!\n");

@@ -436,7 +436,7 @@ int main(int argc, char *argv[])
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glFlush();
-        Sleep(1);
+        //Sleep(1);
         printf("-");
     }
     printf("\nfinish!\n");

@@ -1,13 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.33026.149
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33530.505
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dxva_gles", "dxva_gles.vcxproj", "{24DB6205-5888-4161-8F76-B286371B73E8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "gles-proc", "..\gles-proc\gles-proc.vcxproj", "{76C89E68-D08E-411E-9392-B37A123E9930}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "color-temp", "..\color-temp\color-temp.vcxproj", "{160FECF0-0720-4A7D-8E3C-6C0301CFE95D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "render-image", "..\render-image\render-image.vcxproj", "{34574E40-F538-4B96-9E4B-9136B99AAA02}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +43,14 @@ Global
 		{160FECF0-0720-4A7D-8E3C-6C0301CFE95D}.Release|x64.Build.0 = Release|x64
 		{160FECF0-0720-4A7D-8E3C-6C0301CFE95D}.Release|x86.ActiveCfg = Release|Win32
 		{160FECF0-0720-4A7D-8E3C-6C0301CFE95D}.Release|x86.Build.0 = Release|Win32
+		{34574E40-F538-4B96-9E4B-9136B99AAA02}.Debug|x64.ActiveCfg = Debug|x64
+		{34574E40-F538-4B96-9E4B-9136B99AAA02}.Debug|x64.Build.0 = Debug|x64
+		{34574E40-F538-4B96-9E4B-9136B99AAA02}.Debug|x86.ActiveCfg = Debug|Win32
+		{34574E40-F538-4B96-9E4B-9136B99AAA02}.Debug|x86.Build.0 = Debug|Win32
+		{34574E40-F538-4B96-9E4B-9136B99AAA02}.Release|x64.ActiveCfg = Release|x64
+		{34574E40-F538-4B96-9E4B-9136B99AAA02}.Release|x64.Build.0 = Release|x64
+		{34574E40-F538-4B96-9E4B-9136B99AAA02}.Release|x86.ActiveCfg = Release|Win32
+		{34574E40-F538-4B96-9E4B-9136B99AAA02}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -49,6 +49,12 @@ struct ESContext
     EGLContext  eglContext;
     EGLSurface  eglSurface;
 
+    int imgWidth;
+    int imgHeight;
+    int nChannels;
+    unsigned char* imgBuf;
+    GLuint inputTexture;
+
     /// Callbacks
     void (ESCALLBACK* drawFunc) (ESContext*);
     void (ESCALLBACK* shutdownFunc) (ESContext*);
@@ -411,6 +417,28 @@ int initShader(ESContext* esContext)
     return 0;
 }
 
+int initResources(ESContext* ctx, const char* imgFile)
+{
+    ctx->imgBuf = stbi_load(imgFile, &ctx->imgWidth, &ctx->imgHeight, &ctx->nChannels, 0);
+    if (!ctx->imgBuf) {
+        printf("ERROR: stbi_load image failed! \n");
+        return -1;
+    }
+    printf("image width: %d, height: %d\n", ctx->imgWidth, ctx->imgHeight);
+
+    glGenTextures(1, &ctx->inputTexture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, ctx->inputTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, ctx->imgWidth, ctx->imgHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, ctx->imgBuf);
+    stbi_image_free(ctx->imgBuf);
+
+    return 0;
+}
+
 void draw(ESContext* esContext)
 {
     UserData* userData = (UserData*)esContext->userData;
@@ -503,6 +531,7 @@ int main(int argc, char** argv)
     if (argc >= 2)
         scaling = atoi(argv[1]);
 
+    const char* imgPath = "dog.jpg";
     ESContext esContextData = {};
     ESContext* esContext = &esContextData;
     esContext->width = 320 * scaling;
@@ -518,6 +547,12 @@ int main(int argc, char** argv)
     if (initShader(esContext) != 0)
     {
         printf("ERROR: InitShader failed! \n");
+        return -1;
+    }
+
+    if (initResources(esContext, imgPath) != 0)
+    {
+        printf("ERROR: initResources failed! \n");
         return -1;
     }
 

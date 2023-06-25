@@ -353,27 +353,15 @@ GLuint loadShader(GLenum type, const char* shaderSrc)
 int initShader(ESContext* esContext)
 {
     UserData* userData = (UserData*)esContext->userData;
-    char vShaderStr[] =
-        "#version 300 es                          \n"
-        "layout(location = 0) in vec4 vPosition;  \n"
-        "void main()                              \n"
-        "{                                        \n"
-        "   gl_Position = vPosition;              \n"
-        "}                                        \n";
-
-    char fShaderStr[] =
-        "#version 300 es                              \n"
-        "precision mediump float;                     \n"
-        "out vec4 fragColor;                          \n"
-        "void main()                                  \n"
-        "{                                            \n"
-        "   fragColor = vec4 ( 1.0, 0.0, 0.0, 1.0 );  \n"
-        "}                                            \n";
-
     GLuint vertexShader;
     GLuint fragmentShader;
     GLuint programObject;
     GLint linked;
+
+    std::string vstr = readShaderFile("proc.vert");
+    std::string fstr = readShaderFile("proc.frag");
+    char* vShaderStr = (char*)vstr.c_str();
+    char* fShaderStr = (char*)fstr.c_str();
 
     // Load the vertex/fragment shaders
     vertexShader = loadShader(GL_VERTEX_SHADER, vShaderStr);
@@ -436,36 +424,22 @@ int initResources(ESContext* ctx, const char* imgFile)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, ctx->imgWidth, ctx->imgHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, ctx->imgBuf);
     stbi_image_free(ctx->imgBuf);
 
+    ctx->width = ctx->imgWidth;
+    ctx->height = ctx->imgHeight;
+
     return 0;
 }
 
-void draw(ESContext* esContext)
+void draw(ESContext* ctx)
 {
-    UserData* userData = (UserData*)esContext->userData;
+    UserData* userData = (UserData*)ctx->userData;
     GLfloat vVertices[] = { 0.0f,  0.5f, 0.0f,
-                             -0.5f, -0.5f, 0.0f,
-                             0.5f, -0.5f, 0.0f
+                         -0.5f, -0.5f, 0.0f,
+                         0.5f, -0.5f, 0.0f
     };
 
-#if 1
-    static bool decrease = true;
-    static float ypos = 0.5;
-    ypos = (decrease) ? (ypos - 0.01) : (ypos + 0.01);
-    if (ypos < -0.8)
-    {
-        ypos = -0.8;
-        decrease = false;
-    }
-    if (ypos > 0.5)
-    {
-        ypos = 0.5;
-        decrease = true;
-    }
-    vVertices[1] = ypos;
-#endif
-
     // Set the viewport
-    glViewport(0, 0, esContext->width, esContext->height);
+    glViewport(0, 0, ctx->width, ctx->height);
 
     // Clear the color buffer
     glClear(GL_COLOR_BUFFER_BIT);
@@ -478,6 +452,73 @@ void draw(ESContext* esContext)
     glEnableVertexAttribArray(0);
 
     glDrawArrays(GL_TRIANGLES, 0, 3);
+
+#if 0
+    //========== VAO VBO
+    float vertices[] = {
+        // positions            // texture_coords
+        -1.0f, -1.0f,  0.0f,    0.0f, 0.0f,
+        -1.0f,  1.0f,  0.0f,    0.0f, 1.0f,
+         1.0f, -1.0f,  0.0f,    1.0f, 0.0f,
+         1.0f,  1.0f,  0.0f,    1.0f, 1.0f
+    };
+
+    GLuint VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+
+    //========== output texture
+    GLuint texture_out;
+    glGenTextures(1, &texture_out);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture_out);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, ctx->width, ctx->height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+
+#if 0
+    //========== output framebuffer
+    GLuint framebuffer;
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_out, 0);
+    glViewport(0, 0, ctx->width, ctx->height);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
+        printf("glCheckFramebufferStatus success.\n");
+    }
+    else {
+        printf("glCheckFramebufferStatus error. %d\n", glCheckFramebufferStatus(GL_FRAMEBUFFER));
+    }
+
+    float rv[3] = { 0.9611682f, -0.05449148f, -0.01015827f };
+    float gv[3] = { 0.00256727f, 1.01033f, -0.00388904f };
+    float bv[3] = { 0.004813198f, 0.01739324f, 1.192613f };
+    unsigned int rvec3 = glGetUniformLocation(program, "u_RVec3");
+    unsigned int gvec3 = glGetUniformLocation(program, "u_GVec3");
+    unsigned int bvec3 = glGetUniformLocation(program, "u_BVec3");
+    glUniform3fv(rvec3, 1, rv);
+    glUniform3fv(gvec3, 1, gv);
+    glUniform3fv(bvec3, 1, bv);
+#endif
+
+
+    // Use the program object
+    glUseProgram(userData->programObject);
+
+    //========== render
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    glFlush();
+#endif
 }
 
 void shutdown(ESContext* esContext)
@@ -527,15 +568,11 @@ void winLoop(ESContext* esContext)
 
 int main(int argc, char** argv)
 {
-    int scaling = 1;
-    if (argc >= 2)
-        scaling = atoi(argv[1]);
-
     const char* imgPath = "dog.jpg";
     ESContext esContextData = {};
     ESContext* esContext = &esContextData;
-    esContext->width = 320 * scaling;
-    esContext->height = 240 * scaling;
+    esContext->width = 800;
+    esContext->height = 600;
     esContext->userData = malloc(sizeof(UserData));
 
     if (initEGL(esContext) != 0)

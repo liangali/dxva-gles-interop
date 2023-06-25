@@ -446,14 +446,6 @@ int initResources(ESContext* ctx, const char* imgFile)
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
-    // load texture image
-    ctx->imgBuf = stbi_load(imgFile, &ctx->imgWidth, &ctx->imgHeight, &ctx->nChannels, 0);
-    if (!ctx->imgBuf) {
-        printf("ERROR: stbi_load image failed! \n");
-        return -1;
-    }
-    printf("image width: %d, height: %d\n", ctx->imgWidth, ctx->imgHeight);
-
     glGenTextures(1, &ctx->inputTexture);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, ctx->inputTexture);
@@ -545,11 +537,20 @@ void winLoop(ESContext* esContext)
 
 int main(int argc, char** argv)
 {
-    const char* imgPath = "dog.jpg";
+    const char* imgPath = (argc == 2) ? argv[1] : "dog.jpg";
     ESContext esContextData = {};
     ESContext* esContext = &esContextData;
-    esContext->width = 800;
-    esContext->height = 600;
+
+    // load texture image
+    esContextData.imgBuf = stbi_load(imgPath, &esContextData.imgWidth, &esContextData.imgHeight, &esContextData.nChannels, 0);
+    if (!esContextData.imgBuf) {
+        printf("ERROR: stbi_load image failed! \n");
+        return -1;
+    }
+    printf("image width: %d, height: %d\n", esContextData.imgWidth, esContextData.imgHeight);
+
+    esContext->width = esContextData.imgWidth;
+    esContext->height = esContextData.imgHeight;
     esContext->userData = malloc(sizeof(UserData));
 
     if (initEGL(esContext) != 0)

@@ -55,6 +55,10 @@ struct ESContext
     unsigned char* imgBuf;
     GLuint inputTexture;
 
+    unsigned int VBO;
+    unsigned int VAO;
+    unsigned int EBO;
+
     /// Callbacks
     void (ESCALLBACK* drawFunc) (ESContext*);
     void (ESCALLBACK* shutdownFunc) (ESContext*);
@@ -407,6 +411,42 @@ int initShader(ESContext* esContext)
 
 int initResources(ESContext* ctx, const char* imgFile)
 {
+    float vertices[] = {
+        // positions          // colors           // texture coords
+         1.0f,  1.0f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
+         1.0f, -1.0f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
+        -1.0f, -1.0f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
+        -1.0f,  1.0f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left 
+    };
+
+    unsigned int indices[] = {
+        0, 1, 3, // first triangle
+        1, 2, 3  // second triangle
+    };
+
+    glGenVertexArrays(1, &ctx->VAO);
+    glGenBuffers(1, &ctx->VBO);
+    glGenBuffers(1, &ctx->EBO);
+
+    glBindVertexArray(ctx->VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, ctx->VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ctx->EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // color attribute
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    // texture coord attribute
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+
+    // load texture image
     ctx->imgBuf = stbi_load(imgFile, &ctx->imgWidth, &ctx->imgHeight, &ctx->nChannels, 0);
     if (!ctx->imgBuf) {
         printf("ERROR: stbi_load image failed! \n");
@@ -423,6 +463,7 @@ int initResources(ESContext* ctx, const char* imgFile)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, ctx->imgWidth, ctx->imgHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, ctx->imgBuf);
     stbi_image_free(ctx->imgBuf);
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     ctx->width = ctx->imgWidth;
     ctx->height = ctx->imgHeight;
@@ -433,97 +474,33 @@ int initResources(ESContext* ctx, const char* imgFile)
 void draw(ESContext* ctx)
 {
     UserData* userData = (UserData*)ctx->userData;
-    GLfloat vVertices[] = { 0.0f,  0.5f, 0.0f,
-                         -0.5f, -0.5f, 0.0f,
-                         0.5f, -0.5f, 0.0f
-    };
 
-    // Set the viewport
+    // set the viewport
     glViewport(0, 0, ctx->width, ctx->height);
 
-    // Clear the color buffer
+    // clear frame buffer
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Use the program object
+    // bind Texture
+    glBindTexture(GL_TEXTURE_2D, ctx->inputTexture);
+
+    // use the program object
     glUseProgram(userData->programObject);
 
-    // Load the vertex data
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, vVertices);
-    glEnableVertexAttribArray(0);
-
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-
-#if 0
-    //========== VAO VBO
-    float vertices[] = {
-        // positions            // texture_coords
-        -1.0f, -1.0f,  0.0f,    0.0f, 0.0f,
-        -1.0f,  1.0f,  0.0f,    0.0f, 1.0f,
-         1.0f, -1.0f,  0.0f,    1.0f, 0.0f,
-         1.0f,  1.0f,  0.0f,    1.0f, 1.0f
-    };
-
-    GLuint VAO, VBO;
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-
-    //========== output texture
-    GLuint texture_out;
-    glGenTextures(1, &texture_out);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texture_out);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, ctx->width, ctx->height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-
-#if 0
-    //========== output framebuffer
-    GLuint framebuffer;
-    glGenFramebuffers(1, &framebuffer);
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_out, 0);
-    glViewport(0, 0, ctx->width, ctx->height);
-
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
-        printf("glCheckFramebufferStatus success.\n");
-    }
-    else {
-        printf("glCheckFramebufferStatus error. %d\n", glCheckFramebufferStatus(GL_FRAMEBUFFER));
-    }
-
-    float rv[3] = { 0.9611682f, -0.05449148f, -0.01015827f };
-    float gv[3] = { 0.00256727f, 1.01033f, -0.00388904f };
-    float bv[3] = { 0.004813198f, 0.01739324f, 1.192613f };
-    unsigned int rvec3 = glGetUniformLocation(program, "u_RVec3");
-    unsigned int gvec3 = glGetUniformLocation(program, "u_GVec3");
-    unsigned int bvec3 = glGetUniformLocation(program, "u_BVec3");
-    glUniform3fv(rvec3, 1, rv);
-    glUniform3fv(gvec3, 1, gv);
-    glUniform3fv(bvec3, 1, bv);
-#endif
-
-
-    // Use the program object
-    glUseProgram(userData->programObject);
-
-    //========== render
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    // render
+    glBindVertexArray(ctx->VAO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glFlush();
-#endif
 }
 
 void shutdown(ESContext* esContext)
 {
     UserData* userData = (UserData*)esContext->userData;
+
+    glDeleteVertexArrays(1, &esContext->VAO);
+    glDeleteBuffers(1, &esContext->VBO);
+    glDeleteBuffers(1, &esContext->EBO);
 
     glDeleteProgram(userData->programObject);
 }

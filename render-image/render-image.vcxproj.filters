@@ -23,10 +23,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="proc.frag">
+    <None Include="flip.frag">
       <Filter>Shader</Filter>
     </None>
-    <None Include="proc.vert">
+    <None Include="flip.vert">
       <Filter>Shader</Filter>
     </None>
   </ItemGroup>

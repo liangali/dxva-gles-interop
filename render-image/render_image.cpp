@@ -362,8 +362,8 @@ int initShader(ESContext* esContext)
     GLuint programObject;
     GLint linked;
 
-    std::string vstr = readShaderFile("proc.vert");
-    std::string fstr = readShaderFile("proc.frag");
+    std::string vstr = readShaderFile("flip.vert");
+    std::string fstr = readShaderFile("flip.frag");
     char* vShaderStr = (char*)vstr.c_str();
     char* fShaderStr = (char*)fstr.c_str();
 

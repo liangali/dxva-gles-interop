@@ -70,6 +70,18 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(ProjectDir)$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -81,6 +93,12 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(ProjectDir)flip.vert $(OutDir) /y
+xcopy $(ProjectDir)flip.frag $(OutDir) /y
+xcopy $(ProjectDir)dog.jpg $(OutDir) /y
+xcopy $(ProjectDir)bbb.jpg $(OutDir) /y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -97,6 +115,12 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(ProjectDir)flip.vert $(OutDir) /y
+xcopy $(ProjectDir)flip.frag $(OutDir) /y
+xcopy $(ProjectDir)dog.jpg $(OutDir) /y
+xcopy $(ProjectDir)bbb.jpg $(OutDir) /y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -114,9 +138,10 @@
       <AdditionalDependencies>libEGL.lib;libGLESv2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(ProjectDir)flip.vert $(OutDir) /e /c /f /y
-xcopy $(ProjectDir)flip.frag $(OutDir) /e /c /f /y
-xcopy $(ProjectDir)dog.jpg $(OutDir) /e /c /f /y</Command>
+      <Command>xcopy $(ProjectDir)flip.vert $(OutDir) /y
+xcopy $(ProjectDir)flip.frag $(OutDir) /y
+xcopy $(ProjectDir)dog.jpg $(OutDir) /y
+xcopy $(ProjectDir)bbb.jpg $(OutDir) /y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -139,9 +164,10 @@ xcopy $(ProjectDir)dog.jpg $(OutDir) /e /c /f /y</Command>
       <AdditionalDependencies>libEGL.lib;libGLESv2.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(ProjectDir)flip.vert $(OutDir) /e /c /f /y
-xcopy $(ProjectDir)flip.frag $(OutDir) /e /c /f /y
-xcopy $(ProjectDir)dog.jpg $(OutDir) /e /c /f /y</Command>
+      <Command>xcopy $(ProjectDir)flip.vert $(OutDir) /y
+xcopy $(ProjectDir)flip.frag $(OutDir) /y
+xcopy $(ProjectDir)dog.jpg $(OutDir) /y
+xcopy $(ProjectDir)bbb.jpg $(OutDir) /y</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
